@@ -46,7 +46,7 @@ import java.util.Map;
                 tasks:
                   - id: insert_user
                     type: io.kestra.plugin.supabase.Insert
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -65,7 +65,7 @@ import java.util.Map;
                 tasks:
                   - id: insert_users
                     type: io.kestra.plugin.supabase.Insert
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -87,7 +87,7 @@ import java.util.Map;
                 tasks:
                   - id: upsert_user
                     type: io.kestra.plugin.supabase.Insert
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -107,7 +107,6 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "The name of the table in your Supabase database."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> table;
 
     @Schema(
@@ -115,21 +114,18 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "The data to insert. Can be a single object or an array of objects."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<Object> data;
 
     @Schema(
         title = "Columns to return after insert.",
         description = "Comma-separated list of columns to return after the insert. Defaults to '*' (all columns)."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> select;
 
     @Schema(
         title = "Conflict resolution column(s).",
         description = "Column name(s) to use for conflict resolution (upsert). Comma-separated for multiple columns."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> onConflict;
 
     @Schema(
@@ -137,7 +133,6 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "How to handle conflicts: 'merge-duplicates' (default) or 'ignore-duplicates'."
     )
     @Builder.Default
-    @PluginProperty(dynamic = true)
     private Property<String> resolution = Property.ofValue("merge-duplicates");
 
     @Override

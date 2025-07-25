@@ -49,7 +49,7 @@ import java.util.Map;
                 tasks:
                   - id: query_users
                     type: io.kestra.plugin.supabase.Query
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     functionName: get_users
                     parameters:
@@ -67,7 +67,7 @@ import java.util.Map;
                 tasks:
                   - id: query_user_by_id
                     type: io.kestra.plugin.supabase.Query
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     functionName: get_user_by_id
                     parameters:
@@ -83,14 +83,12 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
         description = "The name of the stored procedure (function) in your Supabase database to execute."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> functionName;
 
     @Schema(
         title = "Parameters to pass to the stored procedure.",
         description = "A map of parameters to pass to the stored procedure."
     )
-    @PluginProperty(dynamic = true)
     private Property<Map<String, Object>> parameters;
 
     @Override

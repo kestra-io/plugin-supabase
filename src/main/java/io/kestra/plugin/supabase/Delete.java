@@ -47,7 +47,7 @@ import java.util.Map;
                 tasks:
                   - id: delete_user
                     type: io.kestra.plugin.supabase.Delete
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     filter: "id=eq.123"
@@ -63,7 +63,7 @@ import java.util.Map;
                 tasks:
                   - id: delete_inactive_users
                     type: io.kestra.plugin.supabase.Delete
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     filter: "status=eq.inactive&last_login=lt.2022-01-01"
@@ -79,7 +79,7 @@ import java.util.Map;
                 tasks:
                   - id: delete_user_with_audit
                     type: io.kestra.plugin.supabase.Delete
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     filter: "id=eq.123"
@@ -95,7 +95,6 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
         description = "The name of the table in your Supabase database."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> table;
 
     @Schema(
@@ -103,14 +102,12 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
         description = "Filter conditions using PostgREST syntax to specify which records to delete (e.g., 'id=eq.123', 'status=eq.inactive'). Be careful with this filter as it determines which records will be deleted."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> filter;
 
     @Schema(
         title = "Columns to return after deletion.",
         description = "Comma-separated list of columns to return from the deleted records. Defaults to '*' (all columns). Set to empty string to not return any data."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> select;
 
     @Override

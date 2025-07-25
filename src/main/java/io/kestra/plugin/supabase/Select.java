@@ -47,7 +47,7 @@ import java.util.Map;
                 tasks:
                   - id: select_users
                     type: io.kestra.plugin.supabase.Select
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                 """
@@ -62,7 +62,7 @@ import java.util.Map;
                 tasks:
                   - id: select_active_users
                     type: io.kestra.plugin.supabase.Select
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     select: "id,name,email,created_at"
@@ -81,7 +81,7 @@ import java.util.Map;
                 tasks:
                   - id: select_users_page
                     type: io.kestra.plugin.supabase.Select
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     limit: 25
@@ -97,42 +97,36 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
         description = "The name of the table in your Supabase database."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> table;
 
     @Schema(
         title = "Columns to select.",
         description = "Comma-separated list of columns to select. If not specified, all columns (*) will be selected."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> select;
 
     @Schema(
         title = "Filter conditions.",
         description = "Filter conditions using PostgREST syntax (e.g., 'status=eq.active', 'age=gte.18')."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> filter;
 
     @Schema(
         title = "Order by clause.",
         description = "Order by clause using PostgREST syntax (e.g., 'created_at.desc', 'name.asc')."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> order;
 
     @Schema(
         title = "Limit the number of rows returned.",
         description = "Maximum number of rows to return."
     )
-    @PluginProperty(dynamic = true)
     private Property<Integer> limit;
 
     @Schema(
         title = "Offset for pagination.",
         description = "Number of rows to skip for pagination."
     )
-    @PluginProperty(dynamic = true)
     private Property<Integer> offset;
 
     @Override

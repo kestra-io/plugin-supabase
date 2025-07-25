@@ -47,7 +47,7 @@ import java.util.Map;
                 tasks:
                   - id: update_user_status
                     type: io.kestra.plugin.supabase.Update
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -66,7 +66,7 @@ import java.util.Map;
                 tasks:
                   - id: update_inactive_users
                     type: io.kestra.plugin.supabase.Update
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -85,7 +85,7 @@ import java.util.Map;
                 tasks:
                   - id: update_user_email
                     type: io.kestra.plugin.supabase.Update
-                    url: https://your-project.supabase.co
+                    url: https://your-project.supabase.com
                     apiKey: "{{ secret('SUPABASE_API_KEY') }}"
                     table: users
                     data:
@@ -104,7 +104,6 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "The name of the table in your Supabase database."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> table;
 
     @Schema(
@@ -112,7 +111,6 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "The data to update as a map of column names to values."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<Map<String, Object>> data;
 
     @Schema(
@@ -120,14 +118,12 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "Filter conditions using PostgREST syntax to specify which records to update (e.g., 'id=eq.123', 'status=eq.active')."
     )
     @NotNull
-    @PluginProperty(dynamic = true)
     private Property<String> filter;
 
     @Schema(
         title = "Columns to return after update.",
         description = "Comma-separated list of columns to return after the update. Defaults to '*' (all columns)."
     )
-    @PluginProperty(dynamic = true)
     private Property<String> select;
 
     @Override
