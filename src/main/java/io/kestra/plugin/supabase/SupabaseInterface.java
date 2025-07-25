@@ -11,7 +11,7 @@ public interface SupabaseInterface {
     
     @Schema(
         title = "The Supabase project URL.",
-        description = "The URL of your Supabase project (e.g., https://your-project.supabase.co)"
+        description = "The URL of your Supabase project (e.g., https://your-project.supabase.com)"
     )
     @NotNull
     Property<String> getUrl();
