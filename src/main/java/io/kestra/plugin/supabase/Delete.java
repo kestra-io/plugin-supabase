@@ -161,7 +161,7 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
             }
 
             // Parse response as JSON (if return was requested)
-            List<Map<String, Object>> deletedRows = null;
+            List<Map<String, Object>> deletedRows = List.of();
             if (responseBody != null && !responseBody.trim().isEmpty() && 
                 renderedSelect != null && !renderedSelect.trim().isEmpty()) {
                 try {
