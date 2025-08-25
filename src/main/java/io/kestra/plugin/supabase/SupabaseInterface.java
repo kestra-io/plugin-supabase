@@ -10,22 +10,22 @@ import jakarta.validation.constraints.NotNull;
 public interface SupabaseInterface {
     
     @Schema(
-        title = "The Supabase project URL.",
+        title = "The Supabase project URL",
         description = "The URL of your Supabase project (e.g., https://your-project.supabase.com)"
     )
     @NotNull
     Property<String> getUrl();
 
     @Schema(
-        title = "The Supabase API key.",
-        description = "The API key for authenticating with Supabase. Use the anon key for client-side operations or the service_role key for server-side operations with elevated privileges."
+        title = "The Supabase API key",
+        description = "The API key for authenticating with Supabase -- use the anon key for client-side operations or the service_role key for server-side operations with elevated privileges."
     )
     @NotNull
     Property<String> getApiKey();
 
     @Schema(
-        title = "The schema to use.",
-        description = "The database schema to use for operations. Defaults to 'public'."
+        title = "The schema to use",
+        description = "The database schema to use for operations -- defaults to 'public'."
     )
     Property<String> getSchema();
 }

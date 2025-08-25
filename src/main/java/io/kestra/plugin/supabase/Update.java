@@ -100,29 +100,29 @@ import java.util.Map;
 public class Update extends AbstractSupabase implements RunnableTask<Update.Output> {
 
     @Schema(
-        title = "The name of the table to update.",
-        description = "The name of the table in your Supabase database."
+        title = "The name of the table to update",
+        description = "The name of the table in your Supabase database"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "The data to update.",
-        description = "The data to update as a map of column names to values."
+        title = "The data to update",
+        description = "The data to update as a map of column names to values"
     )
     @NotNull
     private Property<Map<String, Object>> data;
 
     @Schema(
-        title = "Filter conditions.",
-        description = "Filter conditions using PostgREST syntax to specify which records to update (e.g., 'id=eq.123', 'status=eq.active')."
+        title = "Filter conditions",
+        description = "Filter conditions using PostgREST syntax to specify which records to update (e.g., 'id=eq.123', 'status=eq.active')"
     )
     @NotNull
     private Property<String> filter;
 
     @Schema(
-        title = "Columns to return after update.",
-        description = "Comma-separated list of columns to return after the update. Defaults to '*' (all columns)."
+        title = "Columns to return after update",
+        description = "Comma-separated list of columns to return after the update -- defaults to '*' (all columns)"
     )
     private Property<String> select;
 
@@ -205,33 +205,33 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request."
+            title = "The URI of the executed request"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response."
+            title = "The HTTP status code of the response"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response."
+            title = "The headers of the response"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The updated rows returned from the database."
+            title = "The updated rows returned from the database"
         )
         private final List<Map<String, Object>> updatedRows;
 
         @Schema(
-            title = "The number of rows updated."
+            title = "The number of rows updated"
         )
         private final Integer updatedCount;
 
         @Schema(
-            title = "The raw response body."
+            title = "The raw response body"
         )
         private final String rawResponse;
     }
