@@ -103,34 +103,34 @@ import java.util.Map;
 public class Insert extends AbstractSupabase implements RunnableTask<Insert.Output> {
 
     @Schema(
-        title = "The name of the table to insert into.",
-        description = "The name of the table in your Supabase database."
+        title = "The name of the table to insert into",
+        description = "The name of the table in your Supabase database"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "The data to insert.",
-        description = "The data to insert. Can be a single object or an array of objects."
+        title = "The data to insert",
+        description = "The data to insert -- can be a single object or an array of objects."
     )
     @NotNull
     private Property<Object> data;
 
     @Schema(
-        title = "Columns to return after insert.",
+        title = "Columns to return after insertion",
         description = "Comma-separated list of columns to return after the insert. Defaults to '*' (all columns)."
     )
     private Property<String> select;
 
     @Schema(
-        title = "Conflict resolution column(s).",
-        description = "Column name(s) to use for conflict resolution (upsert). Comma-separated for multiple columns."
+        title = "Conflict resolution column(s)",
+        description = "Column name(s) to use for conflict resolution (upsert) -- comma-separated for multiple columns."
     )
     private Property<String> onConflict;
 
     @Schema(
-        title = "Resolution strategy for conflicts.",
-        description = "How to handle conflicts: 'merge-duplicates' (default) or 'ignore-duplicates'."
+        title = "Resolution strategy for conflicts",
+        description = "How to handle conflicts: 'merge-duplicates' (default) or 'ignore-duplicates'"
     )
     @Builder.Default
     private Property<String> resolution = Property.ofValue("merge-duplicates");
@@ -208,33 +208,33 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request."
+            title = "The URI of the executed request"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response."
+            title = "The HTTP status code of the response"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response."
+            title = "The headers of the response"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The inserted rows returned from the database."
+            title = "The inserted rows returned from the database"
         )
         private final List<Map<String, Object>> insertedRows;
 
         @Schema(
-            title = "The number of rows inserted."
+            title = "The number of rows inserted"
         )
         private final Integer insertedCount;
 
         @Schema(
-            title = "The raw response body."
+            title = "The raw response body"
         )
         private final String rawResponse;
     }

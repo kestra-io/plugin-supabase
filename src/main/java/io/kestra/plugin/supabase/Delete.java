@@ -91,21 +91,21 @@ import java.util.Map;
 public class Delete extends AbstractSupabase implements RunnableTask<Delete.Output> {
 
     @Schema(
-        title = "The name of the table to delete from.",
-        description = "The name of the table in your Supabase database."
+        title = "The name of the table to delete from",
+        description = "The name of the table in your Supabase database"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "Filter conditions.",
+        title = "Filter conditions",
         description = "Filter conditions using PostgREST syntax to specify which records to delete (e.g., 'id=eq.123', 'status=eq.inactive'). Be careful with this filter as it determines which records will be deleted."
     )
     @NotNull
     private Property<String> filter;
 
     @Schema(
-        title = "Columns to return after deletion.",
+        title = "Columns to return after deletion",
         description = "Comma-separated list of columns to return from the deleted records. Defaults to '*' (all columns). Set to empty string to not return any data."
     )
     private Property<String> select;
@@ -204,33 +204,33 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request."
+            title = "The URI of the executed request"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response."
+            title = "The HTTP status code of the response"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response."
+            title = "The headers of the response"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The deleted rows returned from the database (if select was specified)."
+            title = "The deleted rows returned from the database (if select was specified)"
         )
         private final List<Map<String, Object>> deletedRows;
 
         @Schema(
-            title = "The number of rows deleted."
+            title = "The number of rows deleted"
         )
         private final Integer deletedCount;
 
         @Schema(
-            title = "The raw response body."
+            title = "The raw response body"
         )
         private final String rawResponse;
     }

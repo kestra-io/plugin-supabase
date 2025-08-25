@@ -93,39 +93,39 @@ import java.util.Map;
 public class Select extends AbstractSupabase implements RunnableTask<Select.Output> {
 
     @Schema(
-        title = "The name of the table to select from.",
-        description = "The name of the table in your Supabase database."
+        title = "The name of the table to select from",
+        description = "The name of the table in your Supabase database"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "Columns to select.",
+        title = "Columns to select",
         description = "Comma-separated list of columns to select. If not specified, all columns (*) will be selected."
     )
     private Property<String> select;
 
     @Schema(
-        title = "Filter conditions.",
-        description = "Filter conditions using PostgREST syntax (e.g., 'status=eq.active', 'age=gte.18')."
+        title = "Filter conditions",
+        description = "Filter conditions using PostgREST syntax (e.g., 'status=eq.active', 'age=gte.18')"
     )
     private Property<String> filter;
 
     @Schema(
-        title = "Order by clause.",
-        description = "Order by clause using PostgREST syntax (e.g., 'created_at.desc', 'name.asc')."
+        title = "Order by clause",
+        description = "Order by clause using PostgREST syntax (e.g., 'created_at.desc', 'name.asc')"
     )
     private Property<String> order;
 
     @Schema(
-        title = "Limit the number of rows returned.",
-        description = "Maximum number of rows to return."
+        title = "Limit the number of rows returned",
+        description = "Maximum number of rows to return"
     )
     private Property<Integer> limit;
 
     @Schema(
-        title = "Offset for pagination.",
-        description = "Number of rows to skip for pagination."
+        title = "Offset for pagination",
+        description = "Number of rows to skip for pagination"
     )
     private Property<Integer> offset;
 
@@ -215,33 +215,33 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request."
+            title = "The URI of the executed request"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response."
+            title = "The HTTP status code of the response"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response."
+            title = "The headers of the response"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The selected rows from the table."
+            title = "The selected rows from the table"
         )
         private final List<Map<String, Object>> rows;
 
         @Schema(
-            title = "The number of rows returned."
+            title = "The number of rows returned"
         )
         private final Integer size;
 
         @Schema(
-            title = "The raw response body."
+            title = "The raw response body"
         )
         private final String rawResponse;
     }
