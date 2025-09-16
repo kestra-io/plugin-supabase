@@ -6,16 +6,11 @@ import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @KestraTest
-@DisabledIf(
-    value = "canNotBeEnabled",
-    disabledReason = "Needs Supabase API keys and project URL to work"
-)
 class QueryTest extends AbstractSupabaseTest {
     @Inject
     private RunContextFactory runContextFactory;

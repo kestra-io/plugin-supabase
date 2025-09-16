@@ -1,22 +1,21 @@
 package io.kestra.plugin.supabase;
 
-import com.google.common.base.Strings;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.micronaut.context.annotation.Value;
 
 @KestraTest
 public abstract class AbstractSupabaseTest {
-    private static final String SUPABASE_URL = "";
-    private static final String SUPABASE_API_KEY = "";
+    @Value("${supabase.url}")
+    private String supabaseUrl;
 
-    protected static boolean canNotBeEnabled() {
-        return Strings.isNullOrEmpty(getUrl()) || Strings.isNullOrEmpty(getApiKey());
+    @Value("${supabase.api-key}")
+    private String supabaseApiKey;
+
+    protected String getUrl() {
+        return supabaseUrl;
     }
 
-    protected static String getUrl() {
-        return SUPABASE_URL;
-    }
-
-    protected static String getApiKey() {
-        return SUPABASE_API_KEY;
+    protected String getApiKey() {
+        return supabaseApiKey;
     }
 }

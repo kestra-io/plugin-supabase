@@ -1,0 +1,38 @@
+services:
+  db:
+    image: supabase/postgres:15.1.0.148
+    ports: ["54322:5432"]
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    depends_on: [db]
+    expose:
+      - "3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/appdb
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: "this_is_a_demo_secret_change_me_32+chars"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgr.rule=PathPrefix(`/rest/v1`)"
+      - "traefik.http.routers.pgr.entrypoints=web"
+      - "traefik.http.middlewares.stripv1.stripprefix.prefixes=/rest/v1"
+      - "traefik.http.routers.pgr.middlewares=stripv1"
+      - "traefik.http.services.pgr.loadbalancer.server.port=3000"
+
+  traefik:
+    image: traefik:v3.1
+    depends_on: [postgrest]
+    ports:
+      - "54323:80"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
