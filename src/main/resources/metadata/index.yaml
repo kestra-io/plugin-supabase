@@ -1,8 +1,8 @@
 group: io.kestra.plugin.supabase
 name: "supabase"
 title: "Supabase"
-description: "This sub-group of plugins contains tasks for interacting with Supabase."
-body: ""
+description: "Tasks that call Supabase APIs for data and storage operations."
+body: "Provide Supabase project URL and API key or service role credentials to query PostgREST endpoints, manage storage buckets/files, and use auth-enabled requests, returning JSON responses for workflows."
 videos: []
 createdBy: "Kestra Core Team"
 managedBy: "Kestra Core Team"
