@@ -23,7 +23,7 @@ class QueryTest extends AbstractSupabaseTest {
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
-            .data(Property.ofValue(java.util.Map.of("name", "demo-query-user")))
+            .data(java.util.Map.of("name", "demo-query-user"))
             .build();
 
         var seedOut = seed.run(runContext);
