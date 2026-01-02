@@ -25,7 +25,7 @@ class InsertTest extends AbstractSupabaseTest {
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
-            .data(Property.ofValue(Map.of("name", "demo-user")))
+            .data(Map.of("name", "demo-user"))
             .build();
 
         Insert.Output output = task.run(runContext);
