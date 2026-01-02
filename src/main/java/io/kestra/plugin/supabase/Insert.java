@@ -1,13 +1,13 @@
 package io.kestra.plugin.supabase;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.property.Data;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
@@ -20,10 +20,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+
+import static io.kestra.core.utils.Rethrow.throwFunction;
 
 @SuperBuilder
 @ToString
@@ -100,7 +101,7 @@ import java.util.Map;
         )
     }
 )
-public class Insert extends AbstractSupabase implements RunnableTask<Insert.Output> {
+public class Insert extends AbstractSupabase implements RunnableTask<Insert.Output>, io.kestra.core.models.property.Data.From {
 
     @Schema(
         title = "The name of the table to insert into",
@@ -114,7 +115,7 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "The data to insert -- can be a single object or an array of objects."
     )
     @NotNull
-    private Property<Object> data;
+    private Object data;
 
     @Schema(
         title = "Columns to return after insertion",
@@ -139,33 +140,40 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
     public Output run(RunContext runContext) throws Exception {
         try (HttpClient client = this.client(runContext)) {
             String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
-            Object renderedData = runContext.render(this.data).as(Object.class).orElseThrow();
-            
+
+            List<Map<String, Object>> rows = Data.from(getFrom())
+                    .read(runContext)
+                    .map(throwFunction(obj -> runContext.render((Map<String, Object>) obj)))
+                    .collectList()
+                    .block();
+
             String endpoint = buildTableEndpoint(renderedTable);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
                 .method("POST");
 
-            // Add Prefer header for upsert behavior
-            String renderedOnConflict = runContext.render(this.onConflict).as(String.class).orElse(null);
-            String renderedResolution = runContext.render(this.resolution).as(String.class).orElse("merge-duplicates");
-            
-            if (renderedOnConflict != null && !renderedOnConflict.trim().isEmpty()) {
-                String preferValue = "resolution=" + renderedResolution;
-                requestBuilder.addHeader("Prefer", preferValue);
+            var rOnConflict = runContext.render(this.onConflict).as(String.class).orElse(null);
+            var rResolution = runContext.render(this.resolution).as(String.class).orElse("merge-duplicates");
+            var rSelect = runContext.render(this.select).as(String.class).orElse("*");
+
+            // prefer header
+            var prefer = new StringBuilder("return=representation");
+            if (rOnConflict != null && !rOnConflict.trim().isEmpty()) {
+                prefer.append(",resolution=").append(rResolution);
+            }
+            requestBuilder.addHeader("Prefer", prefer.toString());
+
+            // query params
+            StringBuilder query = new StringBuilder("select=").append(rSelect);
+            if (rOnConflict != null && !rOnConflict.trim().isEmpty()) {
+                query.append("&on_conflict=").append(rOnConflict);
             }
 
-            // Add return preference
-            String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
-            requestBuilder.addHeader("Prefer", "return=representation");
-            
-            // Add select query parameter
-            String baseUri = requestBuilder.build().getUri().toString();
-            baseUri += "?select=" + renderedSelect;
-            
+            String baseUri = requestBuilder.build().getUri() + "?" + query;
+
             // Convert data to JSON
-            String jsonBody = JacksonMapper.ofJson().writeValueAsString(renderedData);
-            
-            HttpRequest request = requestBuilder
+            var jsonBody = JacksonMapper.ofJson().writeValueAsString(rows);
+
+            var request = requestBuilder
                 .uri(new URI(baseUri))
                 .body(HttpRequest.StringRequestBody.builder()
                     .content(jsonBody)
@@ -202,6 +210,11 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
                 .rawResponse(responseBody)
                 .build();
         }
+    }
+
+    @Override
+    public Object getFrom() {
+        return getData();
     }
 
     @Builder
