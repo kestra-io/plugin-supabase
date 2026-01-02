@@ -112,7 +112,8 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
     @Schema(
         title = "The data to insert",
-        description = "The data to insert -- can be a single object or an array of objects."
+        description = "The data to insert -- can be a single object or an array of objects.",
+        anyOf = {List.class, Map.class}
     )
     @NotNull
     private Object data;
