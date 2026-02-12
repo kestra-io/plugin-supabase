@@ -1,0 +1,19 @@
+http:
+  routers:
+    pgr:
+      rule: "PathPrefix(`/rest/v1`)"
+      entryPoints:
+        - web
+      service: pgr
+      middlewares:
+        - stripv1
+  middlewares:
+    stripv1:
+      stripPrefix:
+        prefixes:
+          - /rest/v1
+  services:
+    pgr:
+      loadBalancer:
+        servers:
+          - url: "http://postgrest:3000"
