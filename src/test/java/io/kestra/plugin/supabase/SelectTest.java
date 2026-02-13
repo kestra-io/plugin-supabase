@@ -23,9 +23,7 @@ class SelectTest extends AbstractSupabaseTest {
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
-            .data(Property.ofValue(
-                java.util.List.of(java.util.Map.of("name", "demo-select-user"))
-            ))
+            .data(java.util.List.of(java.util.Map.of("name", "demo-select-user")))
             .build();
 
         var seedOut = seed.run(runContext);
