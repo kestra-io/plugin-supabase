@@ -32,8 +32,8 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Insert data into a Supabase table using the REST API.",
-    description = "This task inserts one or more records into a Supabase table using the REST API."
+    title = "Insert rows into a Supabase table",
+    description = "POST rows via Supabase REST. Uses `Prefer: return=representation`; `select` defaults to `*`. Upserts when `onConflict` is set, with resolution defaulting to `merge-duplicates`."
 )
 @Plugin(
     examples = {
@@ -104,35 +104,35 @@ import static io.kestra.core.utils.Rethrow.throwFunction;
 public class Insert extends AbstractSupabase implements RunnableTask<Insert.Output>, io.kestra.core.models.property.Data.From {
 
     @Schema(
-        title = "The name of the table to insert into",
-        description = "The name of the table in your Supabase database"
+        title = "Target table name",
+        description = "Supabase table to insert into; value is rendered before the request"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "The data to insert",
-        description = "The data to insert -- can be a single object or an array of objects.",
+        title = "Rows to insert",
+        description = "Single object or array of objects; rendered then sent as JSON",
         anyOf = {List.class, Map.class}
     )
     @NotNull
     private Object data;
 
     @Schema(
-        title = "Columns to return after insertion",
-        description = "Comma-separated list of columns to return after the insert. Defaults to '*' (all columns)."
+        title = "Columns returned",
+        description = "Comma-separated columns returned from inserted rows; defaults to `*`"
     )
     private Property<String> select;
 
     @Schema(
-        title = "Conflict resolution column(s)",
-        description = "Column name(s) to use for conflict resolution (upsert) -- comma-separated for multiple columns."
+        title = "Conflict target columns",
+        description = "Comma-separated column names used for upsert conflict detection"
     )
     private Property<String> onConflict;
 
     @Schema(
-        title = "Resolution strategy for conflicts",
-        description = "How to handle conflicts: 'merge-duplicates' (default) or 'ignore-duplicates'"
+        title = "Conflict resolution strategy",
+        description = "How to handle conflicts: `merge-duplicates` (default) or `ignore-duplicates`"
     )
     @Builder.Default
     private Property<String> resolution = Property.ofValue("merge-duplicates");
@@ -222,33 +222,33 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request"
+            title = "Executed request URI"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response"
+            title = "HTTP status code"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response"
+            title = "Response headers"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The inserted rows returned from the database"
+            title = "Inserted rows returned"
         )
         private final List<Map<String, Object>> insertedRows;
 
         @Schema(
-            title = "The number of rows inserted"
+            title = "Number of rows inserted"
         )
         private final Integer insertedCount;
 
         @Schema(
-            title = "The raw response body"
+            title = "Raw response body"
         )
         private final String rawResponse;
     }

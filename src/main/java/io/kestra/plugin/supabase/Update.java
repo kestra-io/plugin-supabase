@@ -32,8 +32,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Update data in a Supabase table using the REST API.",
-    description = "This task updates records in a Supabase table using the REST API with support for filtering conditions."
+    title = "Update rows in a Supabase table",
+    description = "PATCHes rows via Supabase REST using a required PostgREST filter. Always requests `Prefer: return=representation`; `select` defaults to `*` to return all columns. Requires an API key with write access to the table."
 )
 @Plugin(
     examples = {
@@ -100,29 +100,29 @@ import java.util.Map;
 public class Update extends AbstractSupabase implements RunnableTask<Update.Output> {
 
     @Schema(
-        title = "The name of the table to update",
-        description = "The name of the table in your Supabase database"
+        title = "Target table name",
+        description = "Supabase table to patch; value is rendered before the request."
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "The data to update",
-        description = "The data to update as a map of column names to values"
+        title = "Row values to apply",
+        description = "Map of column names to values sent as JSON after rendering expressions."
     )
     @NotNull
     private Property<Map<String, Object>> data;
 
     @Schema(
-        title = "Filter conditions",
-        description = "Filter conditions using PostgREST syntax to specify which records to update (e.g., 'id=eq.123', 'status=eq.active')"
+        title = "PostgREST filter",
+        description = "Required filter expression (e.g., `id=eq.123`) that scopes which rows are updated; broad filters can modify many rows."
     )
     @NotNull
     private Property<String> filter;
 
     @Schema(
-        title = "Columns to return after update",
-        description = "Comma-separated list of columns to return after the update -- defaults to '*' (all columns)"
+        title = "Columns returned",
+        description = "Comma-separated columns to include in the response; defaults to `*`."
     )
     private Property<String> select;
 
@@ -205,33 +205,33 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request"
+            title = "Executed request URI"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response"
+            title = "HTTP status code"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response"
+            title = "Response headers"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The updated rows returned from the database"
+            title = "Updated rows returned"
         )
         private final List<Map<String, Object>> updatedRows;
 
         @Schema(
-            title = "The number of rows updated"
+            title = "Number of rows updated"
         )
         private final Integer updatedCount;
 
         @Schema(
-            title = "The raw response body"
+            title = "Raw response body"
         )
         private final String rawResponse;
     }
