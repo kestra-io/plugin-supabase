@@ -32,8 +32,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Select data from a Supabase table using the REST API.",
-    description = "This task queries data from a Supabase table using the REST API with support for filtering, ordering, and pagination."
+    title = "Select rows from a Supabase table",
+    description = "GET rows via Supabase REST. `select` defaults to `*`; supports PostgREST filters, ordering, limit, and offset for pagination."
 )
 @Plugin(
     examples = {
@@ -93,39 +93,39 @@ import java.util.Map;
 public class Select extends AbstractSupabase implements RunnableTask<Select.Output> {
 
     @Schema(
-        title = "The name of the table to select from",
-        description = "The name of the table in your Supabase database"
+        title = "Target table name",
+        description = "Supabase table to query; value is rendered before the request"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
         title = "Columns to select",
-        description = "Comma-separated list of columns to select. If not specified, all columns (*) will be selected."
+        description = "Comma-separated columns to return; defaults to `*` when empty"
     )
     private Property<String> select;
 
     @Schema(
-        title = "Filter conditions",
-        description = "Filter conditions using PostgREST syntax (e.g., 'status=eq.active', 'age=gte.18')"
+        title = "PostgREST filter",
+        description = "Optional filter expression (e.g., `status=eq.active`, `age=gte.18`)"
     )
     private Property<String> filter;
 
     @Schema(
         title = "Order by clause",
-        description = "Order by clause using PostgREST syntax (e.g., 'created_at.desc', 'name.asc')"
+        description = "Ordering using PostgREST syntax (e.g., `created_at.desc`, `name.asc`)"
     )
     private Property<String> order;
 
     @Schema(
-        title = "Limit the number of rows returned",
+        title = "Limit rows",
         description = "Maximum number of rows to return"
     )
     private Property<Integer> limit;
 
     @Schema(
-        title = "Offset for pagination",
-        description = "Number of rows to skip for pagination"
+        title = "Pagination offset",
+        description = "Number of rows to skip before returning data"
     )
     private Property<Integer> offset;
 
@@ -215,33 +215,33 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request"
+            title = "Executed request URI"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response"
+            title = "HTTP status code"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response"
+            title = "Response headers"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The selected rows from the table"
+            title = "Selected rows"
         )
         private final List<Map<String, Object>> rows;
 
         @Schema(
-            title = "The number of rows returned"
+            title = "Number of rows returned"
         )
         private final Integer size;
 
         @Schema(
-            title = "The raw response body"
+            title = "Raw response body"
         )
         private final String rawResponse;
     }

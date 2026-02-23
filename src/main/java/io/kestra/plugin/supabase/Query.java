@@ -33,9 +33,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Execute a SQL query against a Supabase database using stored procedures.",
-    description = "This task executes SQL queries against a Supabase database using the RPC (Remote Procedure Call) functionality. " +
-                  "You need to create a stored procedure in your Supabase database first, then call it using this task."
+    title = "Call a Supabase stored procedure",
+    description = "Invokes a Postgres function over Supabase RPC. Expects the function to exist and accept the provided parameters; sends JSON body (empty object when no parameters) and returns parsed rows."
 )
 @Plugin(
     examples = {
@@ -79,15 +78,15 @@ import java.util.Map;
 public class Query extends AbstractSupabase implements RunnableTask<Query.Output> {
 
     @Schema(
-        title = "The name of the stored procedure to execute",
-        description = "The name of the stored procedure (function) in your Supabase database to execute"
+        title = "Stored procedure name",
+        description = "Supabase function name to call via RPC; value is rendered before the request"
     )
     @NotNull
     private Property<String> functionName;
 
     @Schema(
-        title = "Parameters to pass to the stored procedure",
-        description = "A map of parameters to pass to the stored procedure"
+        title = "Procedure parameters",
+        description = "Optional map rendered to JSON and sent as the request body; empty object is sent when not provided"
     )
     private Property<Map<String, Object>> parameters;
 
@@ -155,33 +154,33 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request"
+            title = "Executed request URI"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response"
+            title = "HTTP status code"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response"
+            title = "Response headers"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The result rows from the query"
+            title = "Result rows"
         )
         private final List<Map<String, Object>> rows;
 
         @Schema(
-            title = "The number of rows returned"
+            title = "Number of rows returned"
         )
         private final Integer size;
 
         @Schema(
-            title = "The raw response body"
+            title = "Raw response body"
         )
         private final String rawResponse;
     }

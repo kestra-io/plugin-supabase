@@ -32,8 +32,8 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor
 @Schema(
-    title = "Delete data from a Supabase table using the REST API.",
-    description = "This task deletes records from a Supabase table using the REST API with support for filtering conditions."
+    title = "Delete rows from a Supabase table",
+    description = "DELETE rows via Supabase REST using a required PostgREST filter. Adds `Prefer: return=representation` only when `select` is non-empty; default select is `*`, set to empty string to skip returning data. Broad filters can remove many rows."
 )
 @Plugin(
     examples = {
@@ -91,22 +91,22 @@ import java.util.Map;
 public class Delete extends AbstractSupabase implements RunnableTask<Delete.Output> {
 
     @Schema(
-        title = "The name of the table to delete from",
-        description = "The name of the table in your Supabase database"
+        title = "Target table name",
+        description = "Supabase table to delete from; value is rendered before the request"
     )
     @NotNull
     private Property<String> table;
 
     @Schema(
-        title = "Filter conditions",
-        description = "Filter conditions using PostgREST syntax to specify which records to delete (e.g., 'id=eq.123', 'status=eq.inactive'). Be careful with this filter as it determines which records will be deleted."
+        title = "PostgREST filter",
+        description = "Required filter expression (e.g., `id=eq.123`) that scopes which rows are deleted; overly broad filters delete many rows"
     )
     @NotNull
     private Property<String> filter;
 
     @Schema(
-        title = "Columns to return after deletion",
-        description = "Comma-separated list of columns to return from the deleted records. Defaults to '*' (all columns). Set to empty string to not return any data."
+        title = "Columns returned",
+        description = "Comma-separated columns returned from deleted rows; defaults to `*`, set empty string to suppress response"
     )
     private Property<String> select;
 
@@ -204,33 +204,33 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
     @Getter
     public static class Output implements io.kestra.core.models.tasks.Output {
         @Schema(
-            title = "The URI of the executed request"
+            title = "Executed request URI"
         )
         private final URI uri;
 
         @Schema(
-            title = "The HTTP status code of the response"
+            title = "HTTP status code"
         )
         private final Integer code;
 
         @Schema(
-            title = "The headers of the response"
+            title = "Response headers"
         )
         @PluginProperty(additionalProperties = List.class)
         private final Map<String, List<String>> headers;
 
         @Schema(
-            title = "The deleted rows returned from the database (if select was specified)"
+            title = "Deleted rows returned"
         )
         private final List<Map<String, Object>> deletedRows;
 
         @Schema(
-            title = "The number of rows deleted"
+            title = "Number of rows deleted"
         )
         private final Integer deletedCount;
 
         @Schema(
-            title = "The raw response body"
+            title = "Raw response body"
         )
         private final String rawResponse;
     }
