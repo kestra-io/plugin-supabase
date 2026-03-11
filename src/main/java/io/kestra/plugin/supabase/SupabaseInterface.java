@@ -1,6 +1,7 @@
 package io.kestra.plugin.supabase;
 
 import io.kestra.core.models.property.Property;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 
@@ -8,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
  * Interface defining common properties for Supabase tasks.
  */
 public interface SupabaseInterface {
-    
+
     @Schema(
         title = "Supabase project URL",
         description = "Base project URL (e.g., `https://your-project.supabase.com`); the REST path /rest/v1 is appended automatically."

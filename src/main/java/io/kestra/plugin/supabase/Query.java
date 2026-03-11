@@ -1,7 +1,15 @@
 package io.kestra.plugin.supabase;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
@@ -12,20 +20,11 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -95,7 +94,7 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
         try (HttpClient client = this.client(runContext)) {
             String renderedFunctionName = runContext.render(this.functionName).as(String.class).orElseThrow();
             Map<String, Object> renderedParameters = runContext.render(this.parameters).asMap(String.class, Object.class);
-            
+
             String endpoint = buildRpcEndpoint(renderedFunctionName);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
                 .method("POST");
@@ -103,15 +102,19 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
             // Add parameters as JSON body if provided
             if (renderedParameters != null && !renderedParameters.isEmpty()) {
                 String jsonBody = JacksonMapper.ofJson().writeValueAsString(renderedParameters);
-                requestBuilder.body(HttpRequest.StringRequestBody.builder()
-                    .content(jsonBody)
-                    .contentType("application/json")
-                    .build());
+                requestBuilder.body(
+                    HttpRequest.StringRequestBody.builder()
+                        .content(jsonBody)
+                        .contentType("application/json")
+                        .build()
+                );
             } else {
-                requestBuilder.body(HttpRequest.StringRequestBody.builder()
-                    .content("{}")
-                    .contentType("application/json")
-                    .build());
+                requestBuilder.body(
+                    HttpRequest.StringRequestBody.builder()
+                        .content("{}")
+                        .contentType("application/json")
+                        .build()
+                );
             }
 
             HttpRequest request = requestBuilder.build();
@@ -126,11 +129,13 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
             List<Map<String, Object>> rows = null;
             if (responseBody != null && !responseBody.trim().isEmpty()) {
                 try {
-                    rows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {});
+                    rows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
+                    });
                 } catch (Exception e) {
                     // If it's not a list, try to parse as a single object
                     try {
-                        Map<String, Object> singleRow = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+                        Map<String, Object> singleRow = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<Map<String, Object>>() {
+                        });
                         rows = List.of(singleRow);
                     } catch (Exception ex) {
                         // If parsing fails, return raw response

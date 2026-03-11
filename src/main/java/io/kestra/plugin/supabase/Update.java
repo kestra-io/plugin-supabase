@@ -1,7 +1,16 @@
 package io.kestra.plugin.supabase;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
@@ -12,19 +21,11 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -132,42 +133,44 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
             String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
             Map<String, Object> renderedData = runContext.render(this.data).asMap(String.class, Object.class);
             String renderedFilter = runContext.render(this.filter).as(String.class).orElseThrow();
-            
+
             String endpoint = buildTableEndpoint(renderedTable);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
                 .method("PATCH");
 
             // Add return preference
             requestBuilder.addHeader("Prefer", "return=representation");
-            
+
             // Build query parameters
             List<String> queryParams = new ArrayList<>();
-            
+
             // Select columns to return
             String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
             queryParams.add("select=" + renderedSelect);
-            
+
             // Add filter conditions
             if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
                 queryParams.add(renderedFilter);
             }
-            
+
             // Build final URI with query parameters
             String baseUri = requestBuilder.build().getUri().toString();
             if (!queryParams.isEmpty()) {
                 String queryString = String.join("&", queryParams);
                 baseUri += "?" + queryString;
             }
-            
+
             // Convert data to JSON
             String jsonBody = JacksonMapper.ofJson().writeValueAsString(renderedData);
-            
+
             HttpRequest request = requestBuilder
                 .uri(new URI(baseUri))
-                .body(HttpRequest.StringRequestBody.builder()
-                    .content(jsonBody)
-                    .contentType("application/json")
-                    .build())
+                .body(
+                    HttpRequest.StringRequestBody.builder()
+                        .content(jsonBody)
+                        .contentType("application/json")
+                        .build()
+                )
                 .build();
 
             HttpResponse<Byte[]> response = client.request(request, Byte[].class);
@@ -181,7 +184,8 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
             List<Map<String, Object>> updatedRows = null;
             if (responseBody != null && !responseBody.trim().isEmpty()) {
                 try {
-                    updatedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {});
+                    updatedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
+                    });
                 } catch (Exception e) {
                     runContext.logger().warn("Failed to parse response as JSON: {}", e.getMessage());
                     updatedRows = List.of();

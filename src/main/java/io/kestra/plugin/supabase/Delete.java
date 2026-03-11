@@ -1,7 +1,16 @@
 package io.kestra.plugin.supabase;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
@@ -12,19 +21,11 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -115,7 +116,7 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
         try (HttpClient client = this.client(runContext)) {
             String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
             String renderedFilter = runContext.render(this.filter).as(String.class).orElseThrow();
-            
+
             String endpoint = buildTableEndpoint(renderedTable);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
                 .method("DELETE");
@@ -125,27 +126,27 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
             if (renderedSelect != null && !renderedSelect.trim().isEmpty()) {
                 requestBuilder.addHeader("Prefer", "return=representation");
             }
-            
+
             // Build query parameters
             List<String> queryParams = new ArrayList<>();
-            
+
             // Select columns to return (if any)
             if (renderedSelect != null && !renderedSelect.trim().isEmpty()) {
                 queryParams.add("select=" + renderedSelect);
             }
-            
+
             // Add filter conditions
             if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
                 queryParams.add(renderedFilter);
             }
-            
+
             // Build final URI with query parameters
             String baseUri = requestBuilder.build().getUri().toString();
             if (!queryParams.isEmpty()) {
                 String queryString = String.join("&", queryParams);
                 baseUri += "?" + queryString;
             }
-            
+
             HttpRequest request = requestBuilder
                 .uri(new URI(baseUri))
                 .build();
@@ -159,10 +160,13 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
 
             // Parse response as JSON (if return was requested)
             List<Map<String, Object>> deletedRows = List.of();
-            if (responseBody != null && !responseBody.trim().isEmpty() && 
-                renderedSelect != null && !renderedSelect.trim().isEmpty()) {
+            if (
+                responseBody != null && !responseBody.trim().isEmpty() &&
+                    renderedSelect != null && !renderedSelect.trim().isEmpty()
+            ) {
                 try {
-                    deletedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {});
+                    deletedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
+                    });
                 } catch (Exception e) {
                     runContext.logger().warn("Failed to parse response as JSON: {}", e.getMessage());
                     deletedRows = List.of();

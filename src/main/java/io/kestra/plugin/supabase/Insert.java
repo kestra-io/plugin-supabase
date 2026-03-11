@@ -1,6 +1,15 @@
 package io.kestra.plugin.supabase;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
+
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
@@ -12,17 +21,11 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 
 import static io.kestra.core.utils.Rethrow.throwFunction;
 
@@ -113,7 +116,7 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
     @Schema(
         title = "Rows to insert",
         description = "Single object or array of objects; rendered then sent as JSON",
-        anyOf = {List.class, Map.class}
+        anyOf = { List.class, Map.class }
     )
     @NotNull
     private Object data;
@@ -143,10 +146,10 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
             String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
 
             List<Map<String, Object>> rows = Data.from(getFrom())
-                    .read(runContext)
-                    .map(throwFunction(obj -> runContext.render((Map<String, Object>) obj)))
-                    .collectList()
-                    .block();
+                .read(runContext)
+                .map(throwFunction(obj -> runContext.render((Map<String, Object>) obj)))
+                .collectList()
+                .block();
 
             String endpoint = buildTableEndpoint(renderedTable);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
@@ -176,10 +179,12 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
             var request = requestBuilder
                 .uri(new URI(baseUri))
-                .body(HttpRequest.StringRequestBody.builder()
-                    .content(jsonBody)
-                    .contentType("application/json")
-                    .build())
+                .body(
+                    HttpRequest.StringRequestBody.builder()
+                        .content(jsonBody)
+                        .contentType("application/json")
+                        .build()
+                )
                 .build();
 
             HttpResponse<Byte[]> response = client.request(request, Byte[].class);
@@ -193,7 +198,8 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
             List<Map<String, Object>> insertedRows = null;
             if (responseBody != null && !responseBody.trim().isEmpty()) {
                 try {
-                    insertedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {});
+                    insertedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
+                    });
                 } catch (Exception e) {
                     runContext.logger().warn("Failed to parse response as JSON: {}", e.getMessage());
                     insertedRows = List.of();

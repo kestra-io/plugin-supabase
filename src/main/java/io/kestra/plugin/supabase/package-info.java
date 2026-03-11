@@ -1,5 +1,5 @@
 @PluginSubGroup(
-    description = "This sub-group of plugins contains tasks for interacting with Supabase.",categories = {
+    description = "This sub-group of plugins contains tasks for interacting with Supabase.", categories = {
         PluginSubGroup.PluginCategory.DATA
     }
 )

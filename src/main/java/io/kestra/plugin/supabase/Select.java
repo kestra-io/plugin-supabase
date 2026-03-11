@@ -1,7 +1,16 @@
 package io.kestra.plugin.supabase;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.kestra.core.exceptions.IllegalVariableEvaluationException;
+
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
@@ -12,19 +21,11 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SuperBuilder
 @ToString
@@ -133,49 +134,49 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
     public Output run(RunContext runContext) throws Exception {
         try (HttpClient client = this.client(runContext)) {
             String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
-            
+
             String endpoint = buildTableEndpoint(renderedTable);
             HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
                 .method("GET");
 
             // Build query parameters
             List<String> queryParams = new ArrayList<>();
-            
+
             // Select columns
             String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
             queryParams.add("select=" + renderedSelect);
-            
+
             // Filter conditions
             String renderedFilter = runContext.render(this.filter).as(String.class).orElse(null);
             if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
                 queryParams.add(renderedFilter);
             }
-            
+
             // Order by
             String renderedOrder = runContext.render(this.order).as(String.class).orElse(null);
             if (renderedOrder != null && !renderedOrder.trim().isEmpty()) {
                 queryParams.add("order=" + renderedOrder);
             }
-            
+
             // Limit
             Integer renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(null);
             if (renderedLimit != null) {
                 queryParams.add("limit=" + renderedLimit);
             }
-            
+
             // Offset
             Integer renderedOffset = runContext.render(this.offset).as(Integer.class).orElse(null);
             if (renderedOffset != null) {
                 queryParams.add("offset=" + renderedOffset);
             }
-            
+
             // Build final URI with query parameters
             String baseUri = requestBuilder.build().getUri().toString();
             if (!queryParams.isEmpty()) {
                 String queryString = String.join("&", queryParams);
                 baseUri += "?" + queryString;
             }
-            
+
             HttpRequest request = requestBuilder
                 .uri(new URI(baseUri))
                 .build();
@@ -191,7 +192,8 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
             List<Map<String, Object>> rows = null;
             if (responseBody != null && !responseBody.trim().isEmpty()) {
                 try {
-                    rows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {});
+                    rows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {
+                    });
                 } catch (Exception e) {
                     runContext.logger().warn("Failed to parse response as JSON: {}", e.getMessage());
                     rows = List.of();
