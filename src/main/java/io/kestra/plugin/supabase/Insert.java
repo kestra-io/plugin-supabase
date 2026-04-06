@@ -111,6 +111,7 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "Supabase table to insert into; value is rendered before the request"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> table;
 
     @Schema(
@@ -119,18 +120,21 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         anyOf = { List.class, Map.class }
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Object data;
 
     @Schema(
         title = "Columns returned",
         description = "Comma-separated columns returned from inserted rows; defaults to `*`"
     )
+    @PluginProperty(group = "processing")
     private Property<String> select;
 
     @Schema(
         title = "Conflict target columns",
         description = "Comma-separated column names used for upsert conflict detection"
     )
+    @PluginProperty(group = "advanced")
     private Property<String> onConflict;
 
     @Schema(
@@ -138,6 +142,7 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
         description = "How to handle conflicts: `merge-duplicates` (default) or `ignore-duplicates`"
     )
     @Builder.Default
+    @PluginProperty(group = "advanced")
     private Property<String> resolution = Property.ofValue("merge-duplicates");
 
     @Override
@@ -221,6 +226,7 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
     @Override
     public Object getFrom() {
+        @PluginProperty(group = "main")
         return getData();
     }
 

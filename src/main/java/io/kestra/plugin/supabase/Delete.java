@@ -96,6 +96,7 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
         description = "Supabase table to delete from; value is rendered before the request"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> table;
 
     @Schema(
@@ -103,12 +104,14 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
         description = "Required filter expression (e.g., `id=eq.123`) that scopes which rows are deleted; overly broad filters delete many rows"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> filter;
 
     @Schema(
         title = "Columns returned",
         description = "Comma-separated columns returned from deleted rows; defaults to `*`, set empty string to suppress response"
     )
+    @PluginProperty(group = "processing")
     private Property<String> select;
 
     @Override
