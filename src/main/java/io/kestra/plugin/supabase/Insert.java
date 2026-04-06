@@ -226,7 +226,6 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
     @Override
     public Object getFrom() {
-        @PluginProperty(group = "main")
         return getData();
     }
 
