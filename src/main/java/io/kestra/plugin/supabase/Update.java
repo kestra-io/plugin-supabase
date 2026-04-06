@@ -105,6 +105,7 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "Supabase table to patch; value is rendered before the request."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> table;
 
     @Schema(
@@ -112,6 +113,7 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "Map of column names to values sent as JSON after rendering expressions."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<Map<String, Object>> data;
 
     @Schema(
@@ -119,12 +121,14 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
         description = "Required filter expression (e.g., `id=eq.123`) that scopes which rows are updated; broad filters can modify many rows."
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> filter;
 
     @Schema(
         title = "Columns returned",
         description = "Comma-separated columns to include in the response; defaults to `*`."
     )
+    @PluginProperty(group = "processing")
     private Property<String> select;
 
     @Override

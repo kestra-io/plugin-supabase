@@ -98,36 +98,42 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
         description = "Supabase table to query; value is rendered before the request"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> table;
 
     @Schema(
         title = "Columns to select",
         description = "Comma-separated columns to return; defaults to `*` when empty"
     )
+    @PluginProperty(group = "processing")
     private Property<String> select;
 
     @Schema(
         title = "PostgREST filter",
         description = "Optional filter expression (e.g., `status=eq.active`, `age=gte.18`)"
     )
+    @PluginProperty(group = "processing")
     private Property<String> filter;
 
     @Schema(
         title = "Order by clause",
         description = "Ordering using PostgREST syntax (e.g., `created_at.desc`, `name.asc`)"
     )
+    @PluginProperty(group = "processing")
     private Property<String> order;
 
     @Schema(
         title = "Limit rows",
         description = "Maximum number of rows to return"
     )
+    @PluginProperty(group = "processing")
     private Property<Integer> limit;
 
     @Schema(
         title = "Pagination offset",
         description = "Number of rows to skip before returning data"
     )
+    @PluginProperty(group = "processing")
     private Property<Integer> offset;
 
     @Override

@@ -81,12 +81,14 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
         description = "Supabase function name to call via RPC; value is rendered before the request"
     )
     @NotNull
+    @PluginProperty(group = "main")
     private Property<String> functionName;
 
     @Schema(
         title = "Procedure parameters",
         description = "Optional map rendered to JSON and sent as the request body; empty object is sent when not provided"
     )
+    @PluginProperty(group = "main")
     private Property<Map<String, Object>> parameters;
 
     @Override
