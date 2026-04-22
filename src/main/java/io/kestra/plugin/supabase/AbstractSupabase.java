@@ -1,5 +1,6 @@
 package io.kestra.plugin.supabase;
 
+import io.kestra.core.models.annotations.PluginProperty;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,6 +35,7 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
     protected Property<String> url;
 
     @NotNull
+    @PluginProperty(secret = true)
     protected Property<String> apiKey;
 
     @Builder.Default
