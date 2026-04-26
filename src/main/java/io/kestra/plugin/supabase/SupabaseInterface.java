@@ -24,7 +24,7 @@ public interface SupabaseInterface {
         description = "API key sent in Authorization and apikey headers; use service_role for writes and elevated policies, anon key is limited."
     )
     @NotNull
-    @PluginProperty(group = "main")
+    @PluginProperty(secret = true, group = "main")
     Property<String> getApiKey();
 
     @Schema(
