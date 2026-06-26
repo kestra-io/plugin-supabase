@@ -16,6 +16,7 @@ import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -39,6 +40,7 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
     @Builder.Default
     protected Property<String> schema = Property.ofValue("public");
 
+    @Schema(title = "HTTP request options")
     @Builder.Default
     protected HttpConfiguration options = HttpConfiguration.builder().build();
 
