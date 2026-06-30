@@ -34,6 +34,7 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
     @NotNull
     protected Property<String> url;
 
+    @ToString.Exclude
     @NotNull
     protected Property<String> apiKey;
 
