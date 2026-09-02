@@ -4,7 +4,7 @@ Read and write data in Supabase from Kestra flows using the PostgREST API.
 
 ## Authentication
 
-Set `url` (required, your Supabase project URL) and `apiKey` (required, your service role or anon key). Optionally set `schema` (default `public`). Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and apply connection properties globally with [plugin defaults](https://kestra.io/docs/workflow-components/plugin-defaults).
+Set `url` (required, your Supabase project URL) and `apiKey` (required, your service role or anon key). Optionally set `schema` (default `public`). Store secrets in [secrets](https://kestra.io/docs/concepts/secret) and set connection properties on each task.
 
 ## Tasks
 
