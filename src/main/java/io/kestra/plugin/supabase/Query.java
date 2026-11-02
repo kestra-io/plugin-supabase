@@ -94,16 +94,16 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
     @Override
     public Output run(RunContext runContext) throws Exception {
         try (HttpClient client = this.client(runContext)) {
-            String renderedFunctionName = runContext.render(this.functionName).as(String.class).orElseThrow();
-            Map<String, Object> renderedParameters = runContext.render(this.parameters).asMap(String.class, Object.class);
+            var rFunctionName = runContext.render(this.functionName).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'functionName'"));
+            var rParameters = runContext.render(this.parameters).asMap(String.class, Object.class);
 
-            String endpoint = buildRpcEndpoint(renderedFunctionName);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildRpcEndpoint(rFunctionName);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("POST");
 
             // Add parameters as JSON body if provided
-            if (renderedParameters != null && !renderedParameters.isEmpty()) {
-                String jsonBody = JacksonMapper.ofJson().writeValueAsString(renderedParameters);
+            if (rParameters != null && !rParameters.isEmpty()) {
+                var jsonBody = JacksonMapper.ofJson().writeValueAsString(rParameters);
                 requestBuilder.body(
                     HttpRequest.StringRequestBody.builder()
                         .content(jsonBody)
@@ -119,13 +119,15 @@ public class Query extends AbstractSupabase implements RunnableTask<Query.Output
                 );
             }
 
-            HttpRequest request = requestBuilder.build();
+            var request = requestBuilder.build();
             HttpResponse<Byte[]> response = client.request(request, Byte[].class);
 
             String responseBody = null;
             if (response.getBody() != null) {
                 responseBody = IOUtils.toString(ArrayUtils.toPrimitive(response.getBody()), StandardCharsets.UTF_8.name());
             }
+
+            validateResponse(response, responseBody);
 
             // Parse response as JSON
             List<Map<String, Object>> rows = null;
