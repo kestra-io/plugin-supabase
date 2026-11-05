@@ -157,18 +157,7 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
                 queryParams.add(rFilter);
             }
 
-            // Build final URI with query parameters
-            var requestUri = requestBuilder.build().getUri();
-            if (!queryParams.isEmpty()) {
-                var queryString = String.join("&", queryParams);
-                requestUri = new URI(
-                    requestUri.getScheme(),
-                    requestUri.getAuthority(),
-                    requestUri.getPath(),
-                    queryString,
-                    null
-                );
-            }
+            var requestUri = withQuery(requestBuilder.build().getUri(), queryParams);
 
             // Convert data to JSON
             var jsonBody = JacksonMapper.ofJson().writeValueAsString(rData);

@@ -2,6 +2,7 @@ package io.kestra.plugin.supabase;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -172,22 +173,13 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
             requestBuilder.addHeader("Prefer", prefer.toString());
 
             // query params
-            var query = new StringBuilder("select=").append(rSelect);
+            var queryParams = new ArrayList<String>();
+            queryParams.add("select=" + rSelect);
             if (rOnConflict != null && !rOnConflict.trim().isEmpty()) {
-                query.append("&on_conflict=").append(rOnConflict);
+                queryParams.add("on_conflict=" + rOnConflict);
             }
 
-            var requestUri = requestBuilder.build().getUri();
-            var queryString = query.toString();
-            if (!queryString.isEmpty()) {
-                requestUri = new URI(
-                    requestUri.getScheme(),
-                    requestUri.getAuthority(),
-                    requestUri.getPath(),
-                    queryString,
-                    null
-                );
-            }
+            var requestUri = withQuery(requestBuilder.build().getUri(), queryParams);
 
             // Convert data to JSON
             var jsonBody = JacksonMapper.ofJson().writeValueAsString(rows);

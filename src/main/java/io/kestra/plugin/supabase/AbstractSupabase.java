@@ -63,7 +63,6 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
         var rApiKey = runContext.render(this.apiKey).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'apiKey'"));
         var rSchema = runContext.render(this.schema).as(String.class).orElse("public");
 
-        // Ensure URL ends with /rest/v1 for the REST API and handle trailing slashes
         var cleanUrl = rUrl.replaceAll("/+$", "");
         if (!cleanUrl.endsWith("/rest/v1")) {
             cleanUrl = cleanUrl + "/rest/v1";
@@ -100,5 +99,69 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
      */
     protected String buildRpcEndpoint(String functionName) {
         return "/rpc/" + functionName;
+    }
+
+    /**
+     * Constructs a request URI with encoded query parameters, preserving existing %HH escape sequences.
+     */
+    protected URI withQuery(URI baseUri, List<String> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return baseUri;
+        }
+
+        var rawQuery = encodeQuery(String.join("&", queryParams));
+        return URI.create(baseUri.toString() + "?" + rawQuery);
+    }
+
+    static String encodeQuery(String query) {
+        if (query == null || query.isEmpty()) {
+            return query;
+        }
+
+        var sb = new StringBuilder();
+        var len = query.length();
+        for (var i = 0; i < len; i++) {
+            var c = query.charAt(i);
+            if (c == ' ') {
+                sb.append("%20");
+            } else if (c == '"') {
+                sb.append("%22");
+            } else if (c == '<') {
+                sb.append("%3C");
+            } else if (c == '>') {
+                sb.append("%3E");
+            } else if (c == '{') {
+                sb.append("%7B");
+            } else if (c == '}') {
+                sb.append("%7D");
+            } else if (c == '|') {
+                sb.append("%7C");
+            } else if (c == '\\') {
+                sb.append("%5C");
+            } else if (c == '^') {
+                sb.append("%5E");
+            } else if (c == '`') {
+                sb.append("%60");
+            } else if (c == '%') {
+                if (i + 2 < len && isHexDigit(query.charAt(i + 1)) && isHexDigit(query.charAt(i + 2))) {
+                    sb.append('%');
+                } else {
+                    sb.append("%25");
+                }
+            } else if (c > 127 || c <= 31) {
+                for (var b : String.valueOf(c).getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+                    sb.append(String.format("%%%02X", b));
+                }
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') ||
+            (c >= 'a' && c <= 'f') ||
+            (c >= 'A' && c <= 'F');
     }
 }

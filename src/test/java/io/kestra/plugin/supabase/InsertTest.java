@@ -21,16 +21,16 @@ class InsertTest extends AbstractSupabaseTest {
 
     @Test
     void run() throws Exception {
-        RunContext runContext = runContextFactory.of();
+        var runContext = runContextFactory.of();
 
-        Insert task = Insert.builder()
+        var task = Insert.builder()
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
             .data(Map.of("name", "demo-user"))
             .build();
 
-        Insert.Output output = task.run(runContext);
+        var output = task.run(runContext);
 
         assertThat(output, is(notNullValue()));
         assertThat(output.getInsertedCount(), is(1));

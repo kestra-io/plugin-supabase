@@ -143,18 +143,7 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
                 queryParams.add(rFilter);
             }
 
-            // Build final URI with query parameters
-            var requestUri = requestBuilder.build().getUri();
-            if (!queryParams.isEmpty()) {
-                var queryString = String.join("&", queryParams);
-                requestUri = new URI(
-                    requestUri.getScheme(),
-                    requestUri.getAuthority(),
-                    requestUri.getPath(),
-                    queryString,
-                    null
-                );
-            }
+            var requestUri = withQuery(requestBuilder.build().getUri(), queryParams);
 
             var request = requestBuilder
                 .uri(requestUri)
