@@ -138,53 +138,59 @@ public class Select extends AbstractSupabase implements RunnableTask<Select.Outp
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (HttpClient client = this.client(runContext)) {
-            String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
+        try (var client = this.client(runContext)) {
+            var rTable = runContext.render(this.table).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'table'"));
 
-            String endpoint = buildTableEndpoint(renderedTable);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildTableEndpoint(rTable);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("GET");
 
             // Build query parameters
-            List<String> queryParams = new ArrayList<>();
+            var queryParams = new ArrayList<String>();
 
             // Select columns
-            String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
-            queryParams.add("select=" + renderedSelect);
+            var rSelect = runContext.render(this.select).as(String.class).orElse("*");
+            queryParams.add("select=" + rSelect);
 
             // Filter conditions
-            String renderedFilter = runContext.render(this.filter).as(String.class).orElse(null);
-            if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
-                queryParams.add(renderedFilter);
+            var rFilter = runContext.render(this.filter).as(String.class).orElse(null);
+            if (rFilter != null && !rFilter.trim().isEmpty()) {
+                queryParams.add(rFilter);
             }
 
             // Order by
-            String renderedOrder = runContext.render(this.order).as(String.class).orElse(null);
-            if (renderedOrder != null && !renderedOrder.trim().isEmpty()) {
-                queryParams.add("order=" + renderedOrder);
+            var rOrder = runContext.render(this.order).as(String.class).orElse(null);
+            if (rOrder != null && !rOrder.trim().isEmpty()) {
+                queryParams.add("order=" + rOrder);
             }
 
             // Limit
-            Integer renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(null);
-            if (renderedLimit != null) {
-                queryParams.add("limit=" + renderedLimit);
+            var rLimit = runContext.render(this.limit).as(Integer.class).orElse(null);
+            if (rLimit != null) {
+                queryParams.add("limit=" + rLimit);
             }
 
             // Offset
-            Integer renderedOffset = runContext.render(this.offset).as(Integer.class).orElse(null);
-            if (renderedOffset != null) {
-                queryParams.add("offset=" + renderedOffset);
+            var rOffset = runContext.render(this.offset).as(Integer.class).orElse(null);
+            if (rOffset != null) {
+                queryParams.add("offset=" + rOffset);
             }
 
             // Build final URI with query parameters
-            String baseUri = requestBuilder.build().getUri().toString();
+            var requestUri = requestBuilder.build().getUri();
             if (!queryParams.isEmpty()) {
-                String queryString = String.join("&", queryParams);
-                baseUri += "?" + queryString;
+                var queryString = String.join("&", queryParams);
+                requestUri = new URI(
+                    requestUri.getScheme(),
+                    requestUri.getAuthority(),
+                    requestUri.getPath(),
+                    queryString,
+                    null
+                );
             }
 
-            HttpRequest request = requestBuilder
-                .uri(new URI(baseUri))
+            var request = requestBuilder
+                .uri(requestUri)
                 .build();
 
             HttpResponse<Byte[]> response = client.request(request, Byte[].class);

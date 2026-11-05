@@ -147,17 +147,17 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (HttpClient client = this.client(runContext)) {
-            String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
+        try (var client = this.client(runContext)) {
+            var rTable = runContext.render(this.table).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'table'"));
 
-            List<Map<String, Object>> rows = Data.from(getFrom())
+            var rows = Data.from(getFrom())
                 .read(runContext)
                 .map(throwFunction(obj -> runContext.render((Map<String, Object>) obj)))
                 .collectList()
                 .block();
 
-            String endpoint = buildTableEndpoint(renderedTable);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildTableEndpoint(rTable);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("POST");
 
             var rOnConflict = runContext.render(this.onConflict).as(String.class).orElse(null);
@@ -172,18 +172,28 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
             requestBuilder.addHeader("Prefer", prefer.toString());
 
             // query params
-            StringBuilder query = new StringBuilder("select=").append(rSelect);
+            var query = new StringBuilder("select=").append(rSelect);
             if (rOnConflict != null && !rOnConflict.trim().isEmpty()) {
                 query.append("&on_conflict=").append(rOnConflict);
             }
 
-            String baseUri = requestBuilder.build().getUri() + "?" + query;
+            var requestUri = requestBuilder.build().getUri();
+            var queryString = query.toString();
+            if (!queryString.isEmpty()) {
+                requestUri = new URI(
+                    requestUri.getScheme(),
+                    requestUri.getAuthority(),
+                    requestUri.getPath(),
+                    queryString,
+                    null
+                );
+            }
 
             // Convert data to JSON
             var jsonBody = JacksonMapper.ofJson().writeValueAsString(rows);
 
             var request = requestBuilder
-                .uri(new URI(baseUri))
+                .uri(requestUri)
                 .body(
                     HttpRequest.StringRequestBody.builder()
                         .content(jsonBody)

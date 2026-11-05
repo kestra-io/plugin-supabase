@@ -116,42 +116,48 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (HttpClient client = this.client(runContext)) {
-            String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
-            String renderedFilter = runContext.render(this.filter).as(String.class).orElseThrow();
+        try (var client = this.client(runContext)) {
+            var rTable = runContext.render(this.table).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'table'"));
+            var rFilter = runContext.render(this.filter).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'filter'"));
 
-            String endpoint = buildTableEndpoint(renderedTable);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildTableEndpoint(rTable);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("DELETE");
 
             // Add return preference if select is specified
-            String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
-            if (renderedSelect != null && !renderedSelect.trim().isEmpty()) {
+            var rSelect = runContext.render(this.select).as(String.class).orElse("*");
+            if (rSelect != null && !rSelect.trim().isEmpty()) {
                 requestBuilder.addHeader("Prefer", "return=representation");
             }
 
             // Build query parameters
-            List<String> queryParams = new ArrayList<>();
+            var queryParams = new ArrayList<String>();
 
             // Select columns to return (if any)
-            if (renderedSelect != null && !renderedSelect.trim().isEmpty()) {
-                queryParams.add("select=" + renderedSelect);
+            if (rSelect != null && !rSelect.trim().isEmpty()) {
+                queryParams.add("select=" + rSelect);
             }
 
             // Add filter conditions
-            if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
-                queryParams.add(renderedFilter);
+            if (rFilter != null && !rFilter.trim().isEmpty()) {
+                queryParams.add(rFilter);
             }
 
             // Build final URI with query parameters
-            String baseUri = requestBuilder.build().getUri().toString();
+            var requestUri = requestBuilder.build().getUri();
             if (!queryParams.isEmpty()) {
-                String queryString = String.join("&", queryParams);
-                baseUri += "?" + queryString;
+                var queryString = String.join("&", queryParams);
+                requestUri = new URI(
+                    requestUri.getScheme(),
+                    requestUri.getAuthority(),
+                    requestUri.getPath(),
+                    queryString,
+                    null
+                );
             }
 
-            HttpRequest request = requestBuilder
-                .uri(new URI(baseUri))
+            var request = requestBuilder
+                .uri(requestUri)
                 .build();
 
             HttpResponse<Byte[]> response = client.request(request, Byte[].class);
@@ -165,7 +171,7 @@ public class Delete extends AbstractSupabase implements RunnableTask<Delete.Outp
             List<Map<String, Object>> deletedRows = List.of();
             if (
                 responseBody != null && !responseBody.trim().isEmpty() &&
-                    renderedSelect != null && !renderedSelect.trim().isEmpty()
+                    rSelect != null && !rSelect.trim().isEmpty()
             ) {
                 try {
                     deletedRows = JacksonMapper.ofJson().readValue(responseBody, new TypeReference<List<Map<String, Object>>>() {

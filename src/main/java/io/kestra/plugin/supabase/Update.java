@@ -133,42 +133,48 @@ public class Update extends AbstractSupabase implements RunnableTask<Update.Outp
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (HttpClient client = this.client(runContext)) {
-            String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
-            Map<String, Object> renderedData = runContext.render(this.data).asMap(String.class, Object.class);
-            String renderedFilter = runContext.render(this.filter).as(String.class).orElseThrow();
+        try (var client = this.client(runContext)) {
+            var rTable = runContext.render(this.table).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'table'"));
+            var rData = runContext.render(this.data).asMap(String.class, Object.class);
+            var rFilter = runContext.render(this.filter).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'filter'"));
 
-            String endpoint = buildTableEndpoint(renderedTable);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildTableEndpoint(rTable);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("PATCH");
 
             // Add return preference
             requestBuilder.addHeader("Prefer", "return=representation");
 
             // Build query parameters
-            List<String> queryParams = new ArrayList<>();
+            var queryParams = new ArrayList<String>();
 
             // Select columns to return
-            String renderedSelect = runContext.render(this.select).as(String.class).orElse("*");
-            queryParams.add("select=" + renderedSelect);
+            var rSelect = runContext.render(this.select).as(String.class).orElse("*");
+            queryParams.add("select=" + rSelect);
 
             // Add filter conditions
-            if (renderedFilter != null && !renderedFilter.trim().isEmpty()) {
-                queryParams.add(renderedFilter);
+            if (rFilter != null && !rFilter.trim().isEmpty()) {
+                queryParams.add(rFilter);
             }
 
             // Build final URI with query parameters
-            String baseUri = requestBuilder.build().getUri().toString();
+            var requestUri = requestBuilder.build().getUri();
             if (!queryParams.isEmpty()) {
-                String queryString = String.join("&", queryParams);
-                baseUri += "?" + queryString;
+                var queryString = String.join("&", queryParams);
+                requestUri = new URI(
+                    requestUri.getScheme(),
+                    requestUri.getAuthority(),
+                    requestUri.getPath(),
+                    queryString,
+                    null
+                );
             }
 
             // Convert data to JSON
-            String jsonBody = JacksonMapper.ofJson().writeValueAsString(renderedData);
+            var jsonBody = JacksonMapper.ofJson().writeValueAsString(rData);
 
-            HttpRequest request = requestBuilder
-                .uri(new URI(baseUri))
+            var request = requestBuilder
+                .uri(requestUri)
                 .body(
                     HttpRequest.StringRequestBody.builder()
                         .content(jsonBody)

@@ -50,4 +50,33 @@ class UpdateTest extends AbstractSupabaseTest {
         assertThat(out.getUpdatedRows(), is(notNullValue()));
         assertThat(out.getUpdatedRows().toString(), containsString("updated-demo-user"));
     }
+
+    @Test
+    void run_filterWithSpaces_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var seed = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(java.util.List.of(java.util.Map.of("name", "update space user")))
+            .build()
+            .run(runContext);
+
+        assertThat(seed.getInsertedCount(), is(1));
+
+        var out = Update.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(Property.ofValue(Map.of("name", "updated space user")))
+            .filter(Property.ofValue("name=eq.update space user"))
+            .build()
+            .run(runContext);
+
+        assertThat(out, is(notNullValue()));
+        assertThat(out.getUpdatedCount(), is(1));
+        assertThat(out.getUpdatedRows(), is(notNullValue()));
+        assertThat(out.getUpdatedRows().toString(), containsString("updated space user"));
+    }
 }

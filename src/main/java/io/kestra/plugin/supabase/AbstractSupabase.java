@@ -59,31 +59,28 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
      * Creates a base HTTP request with common Supabase headers.
      */
     protected HttpRequest.HttpRequestBuilder baseRequest(RunContext runContext, String endpoint) throws IllegalVariableEvaluationException, URISyntaxException {
-        String renderedUrl = runContext.render(this.url).as(String.class).orElseThrow();
-        String renderedApiKey = runContext.render(this.apiKey).as(String.class).orElseThrow();
-        String renderedSchema = runContext.render(this.schema).as(String.class).orElse("public");
+        var rUrl = runContext.render(this.url).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'url'"));
+        var rApiKey = runContext.render(this.apiKey).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'apiKey'"));
+        var rSchema = runContext.render(this.schema).as(String.class).orElse("public");
 
-        // Ensure URL ends with /rest/v1 for the REST API
-        if (!renderedUrl.endsWith("/rest/v1")) {
-            if (renderedUrl.endsWith("/")) {
-                renderedUrl = renderedUrl + "rest/v1";
-            } else {
-                renderedUrl = renderedUrl + "/rest/v1";
-            }
+        // Ensure URL ends with /rest/v1 for the REST API and handle trailing slashes
+        var cleanUrl = rUrl.replaceAll("/+$", "");
+        if (!cleanUrl.endsWith("/rest/v1")) {
+            cleanUrl = cleanUrl + "/rest/v1";
         }
 
-        String fullUrl = renderedUrl + endpoint;
+        var fullUrl = cleanUrl + (endpoint.startsWith("/") ? endpoint : "/" + endpoint);
 
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("apikey", List.of(renderedApiKey));
-        headers.put("Authorization", List.of("Bearer " + renderedApiKey));
+        var headers = new HashMap<String, List<String>>();
+        headers.put("apikey", List.of(rApiKey));
+        headers.put("Authorization", List.of("Bearer " + rApiKey));
         headers.put("Content-Type", List.of("application/json"));
         headers.put("Accept", List.of("application/json"));
 
         // Add schema header if not using the default public schema
-        if (!"public".equals(renderedSchema)) {
-            headers.put("Accept-Profile", List.of(renderedSchema));
-            headers.put("Content-Profile", List.of(renderedSchema));
+        if (!"public".equals(rSchema)) {
+            headers.put("Accept-Profile", List.of(rSchema));
+            headers.put("Content-Profile", List.of(rSchema));
         }
 
         return HttpRequest.builder()
