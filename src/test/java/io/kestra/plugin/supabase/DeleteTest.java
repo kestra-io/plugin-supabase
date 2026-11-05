@@ -74,4 +74,32 @@ class DeleteTest extends AbstractSupabaseTest {
         assertThat(deleteOutput.getDeletedCount(), is(1));
         assertThat(deleteOutput.getDeletedRows().toString(), containsString("delete space user"));
     }
+
+    @Test
+    void run_urlWithTrailingSlash_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var insertTask = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(Map.of("name", "delete-trailing-slash-user"))
+            .build();
+
+        var insertOutput = insertTask.run(runContext);
+        assertThat(insertOutput, is(notNullValue()));
+        assertThat(insertOutput.getInsertedCount(), is(1));
+
+        var deleteTask = Delete.builder()
+            .url(Property.ofValue(getUrl() + "/"))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .filter(Property.ofValue("name=eq.delete-trailing-slash-user"))
+            .build();
+
+        var deleteOutput = deleteTask.run(runContext);
+        assertThat(deleteOutput, is(notNullValue()));
+        assertThat(deleteOutput.getDeletedCount(), is(1));
+        assertThat(deleteOutput.getDeletedRows().toString(), containsString("delete-trailing-slash-user"));
+    }
 }

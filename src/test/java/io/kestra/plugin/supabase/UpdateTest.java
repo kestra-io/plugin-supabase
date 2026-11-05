@@ -79,4 +79,34 @@ class UpdateTest extends AbstractSupabaseTest {
         assertThat(out.getUpdatedRows(), is(notNullValue()));
         assertThat(out.getUpdatedRows().toString(), containsString("updated space user"));
     }
+
+    @Test
+    void run_urlWithTrailingSlash_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var seed = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(java.util.List.of(java.util.Map.of("name", "update-trailing-slash-user")))
+            .build()
+            .run(runContext);
+
+        assertThat(seed.getInsertedCount(), is(1));
+        var id = seed.getInsertedRows().getFirst().get("id");
+
+        var out = Update.builder()
+            .url(Property.ofValue(getUrl() + "/"))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(Property.ofValue(Map.of("name", "updated-trailing-slash-user")))
+            .filter(Property.ofValue("id=eq." + id))
+            .build()
+            .run(runContext);
+
+        assertThat(out, is(notNullValue()));
+        assertThat(out.getUpdatedCount(), is(1));
+        assertThat(out.getUpdatedRows(), is(notNullValue()));
+        assertThat(out.getUpdatedRows().toString(), containsString("updated-trailing-slash-user"));
+    }
 }
