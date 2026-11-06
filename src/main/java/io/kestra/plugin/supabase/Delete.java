@@ -11,9 +11,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
-import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;

@@ -52,6 +52,9 @@ class AbstractSupabaseUrlTest {
         assertThat(AbstractSupabase.encodeQuery("select=id, name"), is("select=id,%20name"));
         assertThat(AbstractSupabase.encodeQuery("desc=100% discount"), is("desc=100%25%20discount"));
         assertThat(AbstractSupabase.encodeQuery("special={\"key\": \"value\"}"), is("special=%7B%22key%22:%20%22value%22%7D"));
+        assertThat(AbstractSupabase.encodeQuery("name=eq.C#1"), is("name=eq.C%231"));
+        assertThat(AbstractSupabase.encodeQuery("name=eq.Rocket \uD83D\uDE80 Launch"), is("name=eq.Rocket%20%F0%9F%9A%80%20Launch"));
+        assertThat(AbstractSupabase.encodeQuery("del=" + (char) 127), is("del=%7F"));
     }
 
     @Test

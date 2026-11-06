@@ -4,9 +4,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpHeaders;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.http.HttpRequest;
@@ -120,41 +120,46 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
 
         var sb = new StringBuilder();
         var len = query.length();
-        for (var i = 0; i < len; i++) {
-            var c = query.charAt(i);
-            if (c == ' ') {
+        for (var i = 0; i < len; ) {
+            var cp = query.codePointAt(i);
+            if (cp == ' ') {
                 sb.append("%20");
-            } else if (c == '"') {
+            } else if (cp == '"') {
                 sb.append("%22");
-            } else if (c == '<') {
+            } else if (cp == '#') {
+                sb.append("%23");
+            } else if (cp == '<') {
                 sb.append("%3C");
-            } else if (c == '>') {
+            } else if (cp == '>') {
                 sb.append("%3E");
-            } else if (c == '{') {
+            } else if (cp == '{') {
                 sb.append("%7B");
-            } else if (c == '}') {
+            } else if (cp == '}') {
                 sb.append("%7D");
-            } else if (c == '|') {
+            } else if (cp == '|') {
                 sb.append("%7C");
-            } else if (c == '\\') {
+            } else if (cp == '\\') {
                 sb.append("%5C");
-            } else if (c == '^') {
+            } else if (cp == '^') {
                 sb.append("%5E");
-            } else if (c == '`') {
+            } else if (cp == '`') {
                 sb.append("%60");
-            } else if (c == '%') {
+            } else if (cp == '%') {
                 if (i + 2 < len && isHexDigit(query.charAt(i + 1)) && isHexDigit(query.charAt(i + 2))) {
                     sb.append('%');
                 } else {
                     sb.append("%25");
                 }
-            } else if (c > 127 || c <= 31) {
-                for (var b : String.valueOf(c).getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+            } else if (cp <= 31 || cp == 127) {
+                sb.append(String.format("%%%02X", cp));
+            } else if (cp > 127) {
+                for (var b : Character.toString(cp).getBytes(StandardCharsets.UTF_8)) {
                     sb.append(String.format("%%%02X", b));
                 }
             } else {
-                sb.append(c);
+                sb.appendCodePoint(cp);
             }
+            i += Character.charCount(cp);
         }
         return sb.toString();
     }
