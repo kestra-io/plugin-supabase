@@ -1,5 +1,8 @@
 package io.kestra.plugin.supabase;
 
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 import io.kestra.core.junit.annotations.KestraTest;
@@ -25,7 +28,7 @@ class SelectTest extends AbstractSupabaseTest {
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
-            .data(java.util.List.of(java.util.Map.of("name", "demo-select-user")))
+            .data(List.of(Map.of("name", "demo-select-user")))
             .build();
 
         var seedOut = seed.run(runContext);
@@ -46,5 +49,123 @@ class SelectTest extends AbstractSupabaseTest {
         assertThat(output.getRows(), is(notNullValue()));
         assertThat(output.getSize(), greaterThanOrEqualTo(1));
         assertThat(output.getRows().toString(), containsString("demo-select-user"));
+    }
+
+    @Test
+    void run_urlWithTrailingSlash_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var task = Select.builder()
+            .url(Property.ofValue(getUrl() + "/"))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .limit(Property.ofValue(1))
+            .build();
+
+        var output = task.run(runContext);
+
+        assertThat(output, is(notNullValue()));
+        assertThat(output.getRows(), is(notNullValue()));
+    }
+
+    @Test
+    void run_filterWithSpaces_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var seed = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(List.of(Map.of("name", "demo select user with spaces")))
+            .build();
+
+        var seedOut = seed.run(runContext);
+        assertThat(seedOut.getInsertedCount(), is(1));
+
+        var task = Select.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .filter(Property.ofValue("name=eq.demo select user with spaces"))
+            .order(Property.ofValue("id.desc"))
+            .limit(Property.ofValue(1))
+            .build();
+
+        var output = task.run(runContext);
+
+        assertThat(output, is(notNullValue()));
+        assertThat(output.getRows(), is(notNullValue()));
+        assertThat(output.getSize(), greaterThanOrEqualTo(1));
+        assertThat(output.getRows().toString(), containsString("demo select user with spaces"));
+    }
+
+    @Test
+    void run_filterAlreadyEncoded_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var seed = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(List.of(Map.of("name", "demo select already encoded")))
+            .build()
+            .run(runContext);
+        assertThat(seed.getInsertedCount(), is(1));
+
+        var task = Select.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .filter(Property.ofValue("name=eq.demo%20select%20already%20encoded"))
+            .limit(Property.ofValue(1))
+            .build();
+
+        var output = task.run(runContext);
+
+        assertThat(output, is(notNullValue()));
+        assertThat(output.getRows(), is(notNullValue()));
+        assertThat(output.getSize(), greaterThanOrEqualTo(1));
+        assertThat(output.getRows().toString(), containsString("demo select already encoded"));
+    }
+
+    @Test
+    void run_filterWithPercentEncodedSpecialChars_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var seed = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(List.of(
+                Map.of("name", "A&B company"),
+                Map.of("name", "user+tag@domain.com")
+            ))
+            .build()
+            .run(runContext);
+        assertThat(seed.getInsertedCount(), is(2));
+
+        var taskAmp = Select.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .filter(Property.ofValue("name=eq.A%26B%20company"))
+            .limit(Property.ofValue(1))
+            .build();
+
+        var outAmp = taskAmp.run(runContext);
+        assertThat(outAmp.getSize(), greaterThanOrEqualTo(1));
+        assertThat(outAmp.getRows().getFirst().get("name"), is("A&B company"));
+
+        var taskPlus = Select.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .filter(Property.ofValue("name=eq.user%2Btag@domain.com"))
+            .limit(Property.ofValue(1))
+            .build();
+
+        var outPlus = taskPlus.run(runContext);
+        assertThat(outPlus.getSize(), greaterThanOrEqualTo(1));
+        assertThat(outPlus.getRows().getFirst().get("name"), is("user+tag@domain.com"));
     }
 }

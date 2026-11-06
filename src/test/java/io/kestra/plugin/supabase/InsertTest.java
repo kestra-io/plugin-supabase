@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 
 import io.kestra.core.junit.annotations.KestraTest;
 import io.kestra.core.models.property.Property;
-import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 
 import jakarta.inject.Inject;
@@ -21,19 +20,56 @@ class InsertTest extends AbstractSupabaseTest {
 
     @Test
     void run() throws Exception {
-        RunContext runContext = runContextFactory.of();
+        var runContext = runContextFactory.of();
 
-        Insert task = Insert.builder()
+        var task = Insert.builder()
             .url(Property.ofValue(getUrl()))
             .apiKey(Property.ofValue(getApiKey()))
             .table(Property.ofValue("kestra"))
             .data(Map.of("name", "demo-user"))
             .build();
 
-        Insert.Output output = task.run(runContext);
+        var output = task.run(runContext);
 
         assertThat(output, is(notNullValue()));
         assertThat(output.getInsertedCount(), is(1));
         assertThat(output.getInsertedRows().toString(), containsString("demo-user"));
+    }
+
+    @Test
+    void run_urlWithTrailingSlash_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var task = Insert.builder()
+            .url(Property.ofValue(getUrl() + "/"))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .data(Map.of("name", "demo-user-trailing-slash"))
+            .build();
+
+        var output = task.run(runContext);
+
+        assertThat(output, is(notNullValue()));
+        assertThat(output.getInsertedCount(), is(1));
+        assertThat(output.getInsertedRows().toString(), containsString("demo-user-trailing-slash"));
+    }
+
+    @Test
+    void run_selectWithSpaces_succeeds() throws Exception {
+        var runContext = runContextFactory.of();
+
+        var task = Insert.builder()
+            .url(Property.ofValue(getUrl()))
+            .apiKey(Property.ofValue(getApiKey()))
+            .table(Property.ofValue("kestra"))
+            .select(Property.ofValue("id, name"))
+            .data(Map.of("name", "demo-user-select-spaces"))
+            .build();
+
+        var output = task.run(runContext);
+
+        assertThat(output, is(notNullValue()));
+        assertThat(output.getInsertedCount(), is(1));
+        assertThat(output.getInsertedRows().toString(), containsString("demo-user-select-spaces"));
     }
 }

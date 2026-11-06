@@ -2,6 +2,7 @@ package io.kestra.plugin.supabase;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
-import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -147,17 +147,17 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
 
     @Override
     public Output run(RunContext runContext) throws Exception {
-        try (HttpClient client = this.client(runContext)) {
-            String renderedTable = runContext.render(this.table).as(String.class).orElseThrow();
+        try (var client = this.client(runContext)) {
+            var rTable = runContext.render(this.table).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'table'"));
 
-            List<Map<String, Object>> rows = Data.from(getFrom())
+            var rows = Data.from(getFrom())
                 .read(runContext)
                 .map(throwFunction(obj -> runContext.render((Map<String, Object>) obj)))
                 .collectList()
                 .block();
 
-            String endpoint = buildTableEndpoint(renderedTable);
-            HttpRequest.HttpRequestBuilder requestBuilder = baseRequest(runContext, endpoint)
+            var endpoint = buildTableEndpoint(rTable);
+            var requestBuilder = baseRequest(runContext, endpoint)
                 .method("POST");
 
             var rOnConflict = runContext.render(this.onConflict).as(String.class).orElse(null);
@@ -172,18 +172,19 @@ public class Insert extends AbstractSupabase implements RunnableTask<Insert.Outp
             requestBuilder.addHeader("Prefer", prefer.toString());
 
             // query params
-            StringBuilder query = new StringBuilder("select=").append(rSelect);
+            var queryParams = new ArrayList<String>();
+            queryParams.add("select=" + rSelect);
             if (rOnConflict != null && !rOnConflict.trim().isEmpty()) {
-                query.append("&on_conflict=").append(rOnConflict);
+                queryParams.add("on_conflict=" + rOnConflict);
             }
 
-            String baseUri = requestBuilder.build().getUri() + "?" + query;
+            var requestUri = withQuery(requestBuilder.build().getUri(), queryParams);
 
             // Convert data to JSON
             var jsonBody = JacksonMapper.ofJson().writeValueAsString(rows);
 
             var request = requestBuilder
-                .uri(new URI(baseUri))
+                .uri(requestUri)
                 .body(
                     HttpRequest.StringRequestBody.builder()
                         .content(jsonBody)

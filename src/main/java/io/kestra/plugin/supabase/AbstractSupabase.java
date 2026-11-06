@@ -4,9 +4,10 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpHeaders;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
 import io.kestra.core.http.HttpRequest;
@@ -30,6 +31,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 public abstract class AbstractSupabase extends Task implements SupabaseInterface {
+    // Characters java.net.URI rejects in a query component, plus '#' which would start a fragment
+    private static final String UNSAFE_QUERY_CHARS = " \"#<>\\^`{|}";
+    private static final HexFormat HEX = HexFormat.of().withUpperCase();
 
     @NotNull
     protected Property<String> url;
@@ -59,31 +63,27 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
      * Creates a base HTTP request with common Supabase headers.
      */
     protected HttpRequest.HttpRequestBuilder baseRequest(RunContext runContext, String endpoint) throws IllegalVariableEvaluationException, URISyntaxException {
-        String renderedUrl = runContext.render(this.url).as(String.class).orElseThrow();
-        String renderedApiKey = runContext.render(this.apiKey).as(String.class).orElseThrow();
-        String renderedSchema = runContext.render(this.schema).as(String.class).orElse("public");
+        var rUrl = runContext.render(this.url).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'url'"));
+        var rApiKey = runContext.render(this.apiKey).as(String.class).orElseThrow(() -> new IllegalArgumentException("Missing required property 'apiKey'"));
+        var rSchema = runContext.render(this.schema).as(String.class).orElse("public");
 
-        // Ensure URL ends with /rest/v1 for the REST API
-        if (!renderedUrl.endsWith("/rest/v1")) {
-            if (renderedUrl.endsWith("/")) {
-                renderedUrl = renderedUrl + "rest/v1";
-            } else {
-                renderedUrl = renderedUrl + "/rest/v1";
-            }
+        var cleanUrl = rUrl.replaceAll("/+$", "");
+        if (!cleanUrl.endsWith("/rest/v1")) {
+            cleanUrl = cleanUrl + "/rest/v1";
         }
 
-        String fullUrl = renderedUrl + endpoint;
+        var fullUrl = cleanUrl + (endpoint.startsWith("/") ? endpoint : "/" + endpoint);
 
-        Map<String, List<String>> headers = new HashMap<>();
-        headers.put("apikey", List.of(renderedApiKey));
-        headers.put("Authorization", List.of("Bearer " + renderedApiKey));
+        var headers = new HashMap<String, List<String>>();
+        headers.put("apikey", List.of(rApiKey));
+        headers.put("Authorization", List.of("Bearer " + rApiKey));
         headers.put("Content-Type", List.of("application/json"));
         headers.put("Accept", List.of("application/json"));
 
         // Add schema header if not using the default public schema
-        if (!"public".equals(renderedSchema)) {
-            headers.put("Accept-Profile", List.of(renderedSchema));
-            headers.put("Content-Profile", List.of(renderedSchema));
+        if (!"public".equals(rSchema)) {
+            headers.put("Accept-Profile", List.of(rSchema));
+            headers.put("Content-Profile", List.of(rSchema));
         }
 
         return HttpRequest.builder()
@@ -103,5 +103,42 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
      */
     protected String buildRpcEndpoint(String functionName) {
         return "/rpc/" + functionName;
+    }
+
+    /**
+     * Constructs a request URI with encoded query parameters, preserving existing %HH escape sequences.
+     */
+    protected URI withQuery(URI baseUri, List<String> queryParams) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return baseUri;
+        }
+
+        var rawQuery = encodeQuery(String.join("&", queryParams));
+        return URI.create(baseUri.toString() + "?" + rawQuery);
+    }
+
+    /**
+     * Percent-encodes characters that are not legal in a URI query, while preserving valid %HH sequences
+     * so users can pre-encode reserved characters (e.g. {@code a%2Bb} to send a literal '+').
+     * {@link java.net.URLEncoder} or the multi-argument {@link URI} constructors cannot be used because they always re-encode '%'.
+     */
+    static String encodeQuery(String query) {
+        if (query == null || query.isEmpty()) {
+            return query;
+        }
+
+        var bytes = query.getBytes(StandardCharsets.UTF_8);
+        var sb = new StringBuilder(bytes.length);
+        for (var i = 0; i < bytes.length; i++) {
+            var b = bytes[i] & 0xFF;
+            var keepEscape = b == '%' && i + 2 < bytes.length
+                && HexFormat.isHexDigit(bytes[i + 1]) && HexFormat.isHexDigit(bytes[i + 2]);
+            if (b <= 0x20 || b >= 0x7F || UNSAFE_QUERY_CHARS.indexOf(b) >= 0 || (b == '%' && !keepEscape)) {
+                sb.append('%').append(HEX.toHexDigits((byte) b));
+            } else {
+                sb.append((char) b);
+            }
+        }
+        return sb.toString();
     }
 }
