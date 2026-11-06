@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.List;
 
 import io.kestra.core.exceptions.IllegalVariableEvaluationException;
@@ -30,6 +31,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @NoArgsConstructor
 public abstract class AbstractSupabase extends Task implements SupabaseInterface {
+    // Characters java.net.URI rejects in a query component, plus '#' which would start a fragment
+    private static final String UNSAFE_QUERY_CHARS = " \"#<>\\^`{|}";
+    private static final HexFormat HEX = HexFormat.of().withUpperCase();
 
     @NotNull
     protected Property<String> url;
@@ -113,60 +117,28 @@ public abstract class AbstractSupabase extends Task implements SupabaseInterface
         return URI.create(baseUri.toString() + "?" + rawQuery);
     }
 
+    /**
+     * Percent-encodes characters that are not legal in a URI query, while preserving valid %HH sequences
+     * so users can pre-encode reserved characters (e.g. {@code a%2Bb} to send a literal '+').
+     * {@link java.net.URLEncoder} or the multi-argument {@link URI} constructors cannot be used because they always re-encode '%'.
+     */
     static String encodeQuery(String query) {
         if (query == null || query.isEmpty()) {
             return query;
         }
 
-        var sb = new StringBuilder();
-        var len = query.length();
-        for (var i = 0; i < len; ) {
-            var cp = query.codePointAt(i);
-            if (cp == ' ') {
-                sb.append("%20");
-            } else if (cp == '"') {
-                sb.append("%22");
-            } else if (cp == '#') {
-                sb.append("%23");
-            } else if (cp == '<') {
-                sb.append("%3C");
-            } else if (cp == '>') {
-                sb.append("%3E");
-            } else if (cp == '{') {
-                sb.append("%7B");
-            } else if (cp == '}') {
-                sb.append("%7D");
-            } else if (cp == '|') {
-                sb.append("%7C");
-            } else if (cp == '\\') {
-                sb.append("%5C");
-            } else if (cp == '^') {
-                sb.append("%5E");
-            } else if (cp == '`') {
-                sb.append("%60");
-            } else if (cp == '%') {
-                if (i + 2 < len && isHexDigit(query.charAt(i + 1)) && isHexDigit(query.charAt(i + 2))) {
-                    sb.append('%');
-                } else {
-                    sb.append("%25");
-                }
-            } else if (cp <= 31 || cp == 127) {
-                sb.append(String.format("%%%02X", cp));
-            } else if (cp > 127) {
-                for (var b : Character.toString(cp).getBytes(StandardCharsets.UTF_8)) {
-                    sb.append(String.format("%%%02X", b));
-                }
+        var bytes = query.getBytes(StandardCharsets.UTF_8);
+        var sb = new StringBuilder(bytes.length);
+        for (var i = 0; i < bytes.length; i++) {
+            var b = bytes[i] & 0xFF;
+            var keepEscape = b == '%' && i + 2 < bytes.length
+                && HexFormat.isHexDigit(bytes[i + 1]) && HexFormat.isHexDigit(bytes[i + 2]);
+            if (b <= 0x20 || b >= 0x7F || UNSAFE_QUERY_CHARS.indexOf(b) >= 0 || (b == '%' && !keepEscape)) {
+                sb.append('%').append(HEX.toHexDigits((byte) b));
             } else {
-                sb.appendCodePoint(cp);
+                sb.append((char) b);
             }
-            i += Character.charCount(cp);
         }
         return sb.toString();
-    }
-
-    private static boolean isHexDigit(char c) {
-        return (c >= '0' && c <= '9') ||
-            (c >= 'a' && c <= 'f') ||
-            (c >= 'A' && c <= 'F');
     }
 }
